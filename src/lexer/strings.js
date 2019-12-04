@@ -175,6 +175,9 @@ module.exports = {
         return true;
       }
     }
+
+    // If it is not the end of doc, restore curosr
+    this.unput(this.heredoc_label.indentation);
     return false;
   },
 
