@@ -65,7 +65,8 @@ module.exports = {
             this._input[this.offset - 1] === "\n"
           ) {
             // go go go
-            this.heredoc_label = yylabel;
+            this.heredoc_label.label = yylabel;
+            this.heredoc_label.length = yylabel.length;
             yyoffset = this.offset - revert;
             this.offset = revert;
             this.consume(yyoffset);
@@ -128,14 +129,49 @@ module.exports = {
   // check if its a DOC end sequence
   isDOC_MATCH: function() {
     // @fixme : check if out of text limits
+
+    // Ensure current state is really after a new line break, not after a such as ${variables}
+    const prev_ch = this._input.substring(this.offset - 2, this.offset - 1);
+    if (prev_ch !== "\n" && prev_ch !== "\r") {
+      return false;
+    }
+
+    // skip leading spaces or tabs
+    let indentation_uses_spaces = false;
+    let indentation_uses_tabs = false;
+    // reset heredoc_label structure
+    this.heredoc_label.indentation_uses_spaces = false;
+    this.heredoc_label.indentation = 0;
+    let leading_ch = this._input.substring(this.offset - 1, this.offset);
+    while (/[\t ]/.test(leading_ch)) {
+      if (leading_ch === " ") {
+        indentation_uses_spaces = true;
+        this.heredoc_label.indentation_uses_spaces = true;
+      } else if (leading_ch === "\t") {
+        indentation_uses_tabs = true;
+      }
+      this.heredoc_label.indentation++;
+      leading_ch = this.input();
+    }
+
     if (
       this._input.substring(
         this.offset - 1,
         this.offset - 1 + this.heredoc_label.length
-      ) === this.heredoc_label
+      ) === this.heredoc_label.label
     ) {
       const ch = this._input[this.offset - 1 + this.heredoc_label.length];
       if (ch === "\n" || ch === "\r" || ch === ";") {
+        // https://wiki.php.net/rfc/flexible_heredoc_nowdoc_syntaxes
+        if (indentation_uses_spaces && indentation_uses_tabs) {
+          throw new Error(
+            "Parse error:  mixing spaces and tabs in ending marker at line " +
+              this.yylineno +
+              " (offset " +
+              this.offset +
+              ")"
+          );
+        }
         return true;
       }
     }

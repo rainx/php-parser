@@ -154,6 +154,18 @@ lexer.prototype.setInput = function(input) {
     this.conditionStack = [];
     this.begin("INITIAL");
   }
+  // https://github.com/php/php-src/blob/999e32b65a8a4bb59e27e538fa68ffae4b99d863/Zend/zend_language_scanner.h#L59
+  // Used for heredoc and nowdoc
+  this.heredoc_label = {
+    label: "",
+    length: 0,
+    indentation: 0,
+    indentation_uses_spaces: false,
+    // for backward compatible
+    toString: function() {
+      this.label;
+    }
+  };
   return this;
 };
 
@@ -305,6 +317,12 @@ lexer.prototype.getState = function() {
       first_column: this.yylloc.first_column,
       last_line: this.yylloc.last_line,
       last_column: this.yylloc.last_column
+    },
+    heredoc_label: {
+      label: this.heredoc_label.indentation,
+      length: this.heredoc_label.length,
+      indentation: this.heredoc_label.indentation,
+      indentation_uses_spaces: this.heredoc_label.indentation_uses_spaces
     }
   };
 };
@@ -318,6 +336,9 @@ lexer.prototype.setState = function(state) {
   this.yylineno = state.yylineno;
   this.yyprevcol = state.yyprevcol;
   this.yylloc = state.yylloc;
+  if (state.heredoc_label) {
+    this.heredoc_label = state.heredoc_label;
+  }
   return this;
 };
 

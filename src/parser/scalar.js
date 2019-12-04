@@ -140,7 +140,7 @@ module.exports = {
               start,
               this.lexer.yylloc.first_offset
             );
-            node = node(value, raw, this.lexer.heredoc_label);
+            node = node(value, raw, this.lexer.heredoc_label.label);
             return node;
           } else {
             return this.read_encapsed_string(this.tok.T_END_HEREDOC);
@@ -320,7 +320,7 @@ module.exports = {
     node = node(value, raw, type);
 
     if (expect === this.tok.T_END_HEREDOC) {
-      node.label = this.lexer.heredoc_label;
+      node.label = this.lexer.heredoc_label.label;
     }
     return node;
   },
