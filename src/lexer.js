@@ -161,6 +161,13 @@ lexer.prototype.setInput = function(input) {
     length: 0,
     indentation: 0,
     indentation_uses_spaces: false,
+    /**
+     * this used for parser to detemine the if current node segment is first encaps node.
+     * if ture, the indentation will remove from the begining. and if false, the prev node
+     * might be a variable '}' ,and the leading spaces should not be removed util meet the
+     * first \n
+     */
+    first_encaps_node: false,
     // for backward compatible
     toString: function() {
       this.label;
@@ -318,12 +325,7 @@ lexer.prototype.getState = function() {
       last_line: this.yylloc.last_line,
       last_column: this.yylloc.last_column
     },
-    heredoc_label: {
-      label: this.heredoc_label.indentation,
-      length: this.heredoc_label.length,
-      indentation: this.heredoc_label.indentation,
-      indentation_uses_spaces: this.heredoc_label.indentation_uses_spaces
-    }
+    heredoc_label: this.heredoc_label
   };
 };
 

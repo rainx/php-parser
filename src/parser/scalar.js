@@ -44,6 +44,31 @@ module.exports = {
   },
 
   /**
+   * Remove all leading spaces each line for heredoc text if there is a indentation
+   * @param {string} text
+   * @param {number} indentation
+   * @param {boolean} indentation_uses_spaces
+   * @param {boolean} is_line_start if it is behind a variable, the first N spaces should not be removed
+   */
+  remove_heredoc_leading_whitespace_chars: function(
+    text,
+    indentation,
+    indentation_uses_spaces,
+    is_line_start
+  ) {
+    if (indentation === 0) {
+      return text;
+    }
+
+    const matchChar = indentation_uses_spaces ? " " : "\t";
+
+    // Rough replace, need more check
+    if (is_line_start) {
+      r;
+    }
+  },
+
+  /**
    * Reads dereferencable scalar
    */
   read_dereferencable_scalar: function() {
@@ -213,6 +238,12 @@ module.exports = {
     if (this.token === this.tok.T_ENCAPSED_AND_WHITESPACE) {
       const text = this.text();
       this.next();
+
+      console.log({
+        result,
+        heredoc_label: JSON.stringify(this.lexer.heredoc_label)
+      });
+      // if this.lexer.heredoc_label.first_encaps_node -> remove first indents
       result = result(
         "string",
         false,
@@ -287,6 +318,8 @@ module.exports = {
       result = result("string", false, value, false, value);
     }
 
+    // reset first_encaps_node to false after access any node
+    this.lexer.heredoc_label.first_encaps_node = false;
     return encapsedPart(result, syntax, curly);
   },
   /**
